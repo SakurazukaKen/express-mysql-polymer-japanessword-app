@@ -1,0 +1,182 @@
+<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="/bower_components/paper-material/paper-material.html">
+<link rel="import" href="/bower_components/paper-styles/color.html">
+<link rel="import" href="/bower_components/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/bower_components/paper-card/paper-card.html">
+<link rel="import" href="/bower_components/paper-scroll-header-panel/paper-scroll-header-panel.html">
+<link rel="import" href="/bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="/bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/bower_components/paper-styles/color.html">
+<link rel="import" href="/bower_components/iron-flex-layout/iron-flex-layout.html">
+<!--
+A comment describing this element
+
+Example:
+
+    <my-elem></my-elem>
+
+Example:
+
+    <my-elem>
+      <h2>Hello my-elem</h2>
+    </my-elem>
+
+@demo demo/index.html
+-->
+<dom-module id="custom-grid">
+  <template>
+    <style>
+    :host {
+      display: block;
+      --paper-card-header-color: white;
+      --paper-card-header: {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+      ;
+      --paper-card-header-text: {
+        font-size: 1em;
+        padding-bottom: 12px;
+        padding-top: 12px;
+      }
+    }
+    
+    .lesson-box {
+      margin: 1%;
+      color: white;
+      text-align: start;
+      float: left;
+      width: 48%;
+      height: auto;
+    }
+    
+    .lesson-box:before {
+      content: '';
+      float: left;
+      padding-top: 100%;
+    }
+    
+    .yellow {
+      background-color: var(--paper-yellow-400);
+    }
+    
+    .purple {
+      background-color: var(--paper-purple-400);
+    }
+    
+    .blue {
+      background-color: var(--paper-light-blue-400);
+    }
+    
+    .lime {
+      background-color: var(--paper-lime-400);
+    }
+    
+    .kaikon {
+      background-color: #F8C3CD;
+    }
+    
+    .yanagicha {
+      background-color: #939650;
+    }
+    
+    .mizuasagi {
+      background-color: #66BAB7;
+    }
+    
+    .benifuji {
+      background-color: #B481BB;
+    }
+    
+    .benimidori {
+      background-color: #7B90D2;
+    }
+    
+    paper-scroll-header-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: var(--paper-grey-200, #eee);
+      ;
+    }
+    
+    paper-toolbar {
+      background-color: #51A8DD;
+    }
+    
+    paper-toolbar .title {
+      margin: 0 8px;
+    }
+    
+    paper-scroll-header-panel .content {
+      padding: 8px;
+    }
+    
+    paper-icon-button {
+      --paper-icon-button-ink-color: white;
+    }
+    
+    .spacer {
+      @apply(--layout-flex);
+    }
+    </style>
+    <iron-ajax auto url="/api/lessons" handle-as="json" last-response="{{data}}"></iron-ajax>
+    <paper-scroll-header-panel fixed>
+      <paper-toolbar>
+        <paper-icon-button icon="arrow-back"></paper-icon-button>
+        <div class="spacer title">lessons</div>
+        <paper-icon-button icon="search"></paper-icon-button>
+        <paper-icon-button icon="more-vert"></paper-icon-button>
+      </paper-toolbar>
+      <div class="content">
+        <paper-input hidden label="Search" value="{{filterValue}}"></paper-input>
+        <div class="">
+          <template is="dom-repeat" items={{data}} as="item" filter="{{_filter(filterValue)}}" sort="_sort">
+            <!-- {{item}} and {{index}} can be used in this binding scope -->
+            <a href$="{{_getHerf(item.id)}}">
+              <paper-card class$="{{_getClass(colors.*, item.chapter)}}" heading="{{getLessonTitle(item)}}">
+              </paper-card>
+            </a>
+          </template>
+        </div>
+      </div>
+    </paper-scroll-header-panel>
+  </template>
+  <script>
+  Polymer({
+    is: 'custom-grid',
+    properties: {
+      colors: {
+        type: Array,
+        value: ['kaikon', 'benimidori', 'mizuasagi', 'benifuji']
+      }
+    },
+    _handleResponse: (data) => {
+      alert('get data');
+      this.data = data;
+    },
+    _getClass: (change, lesson) => {
+      return " lesson-box " + change.base[lesson % 4];
+    },
+    _getHerf: (id) => {
+      return "#/words/" + id;
+    },
+    _filter: (filterVal) => {
+      return (lesson) => {
+        if (!filterVal) return true;
+        if (!lesson) return false;
+        return (lesson.book && ~lesson.book.indexOf(filterVal));
+      }
+    },
+    getLessonTitle: (item) => {
+      return item.book + ' ' + item.chapter + '单元';
+    },
+    _sort: (a, b) => {
+      a.id > b.id;
+    }
+  });
+  </script>
+</dom-module>
