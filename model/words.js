@@ -4,7 +4,7 @@ mysql.configure(dbconfig.connection);
 module.exports = {
   add: function(input) {
     var word = input;
-    return mysql.query("INSERT INTO word(kana, kanji, trans, lid) VALUE (?, ?, ?, ?)", [word.kana, word.kanji, word.trans, word.lid])
+    return mysql.query("INSERT INTO word(kana, kanji, trans, type,lid) VALUE (?, ?, ?, ?, ?)", [word.kana, word.kanji, word.trans, word.type,word.lid])
     .then(function(data) {
       word.id = data[0].insertId;
       return word;

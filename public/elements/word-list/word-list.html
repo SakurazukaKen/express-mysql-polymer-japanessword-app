@@ -5,8 +5,14 @@
 <link rel="import" href="/bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/bower_components/paper-styles/color.html">
+<link rel="import" href="/bower_components/paper-styles/paper-style-classes.html">
 <link rel="import" href="/bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="/bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="/bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="/bower_components/paper-item/paper-item.html">
+<link rel="import" href="/bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="/bower_components/paper-item/paper-item-body.html">
+<link rel="import" href="/bower_components/paper-styles/color.html">
 <!--
 A comment describing this element
 
@@ -47,7 +53,7 @@ Example:
       }
       /* background for toolbar when it is condensed */
       --paper-scroll-header-panel-condensed-header: {
-        background-image: url(images/bg4.jpg);
+        /*background-image: url(images/bg4.jpg);*/
       }
     }
     
@@ -56,6 +62,7 @@ Example:
       height: 256px;
       background-color: transparent;
     }
+    
     a {
       color: white;
     }
@@ -75,21 +82,44 @@ Example:
       --paper-icon-button-ink-color: white;
     }
     
-    .content {
-      padding: 8px;
-    }
+    .content {}
     
     .spacer {
       @apply(--layout-flex);
     }
     
     .demo-block {
-      height: 200px;
+      padding: 12px 24px;
+      margin: 5px 0px;
+    }
+    
+    .play-fab {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+    }
+
+    .avatar {
+      display: inline-block;
+      box-sizing: border-box;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--paper-amber-500);
+      text-align: center;
+    }
+
+    .blue {
+      background-color: var(--paper-light-blue-300);
+    }
+    .type {
+      line-height: 40px;
+      color: white;
     }
     </style>
     <carbon-route route="{{route}}" pattern="/:id" data="{{data}}" tail="{{tail}}"></carbon-route>
-    <iron-ajax auto url="api/words/{{data.id}}" handle-as="json" last-response="{{lastResponse}}"></iron-ajax>
-    <paper-scroll-header-panel condenses header-height="256" condensed-header-height="64">
+    <iron-ajax auto url="/api/record/{{data.id}}" handle-as="json" last-response="{{lastResponse}}"></iron-ajax>
+    <paper-scroll-header-panel condenses keep-condensed-header header-height="256" condensed-header-height="60">
       <paper-toolbar class="tall">
         <a href="#/lessons">
           <paper-icon-button icon="arrow-back"></paper-icon-button>
@@ -98,35 +128,61 @@ Example:
         <paper-icon-button icon="social:school"></paper-icon-button>
         <div class="bottom bottom-text title" id="word-list-title">
           <div>{{_getTitle(lastResponse.lesson)}}</div>
-          <div class="subtitle">学习进度35/55</div>
         </div>
       </paper-toolbar>
       <div class="content layout vertical">
         <template is="dom-repeat" items={{lastResponse.words}} as="item" index-as="index">
           <!-- {{"item"}} and {{"index"}} can be used in this binding scope -->
-          <paper-material flex elevation="1" class="demo-block">
-            {{item.kanji}}
-          </paper-material>
+          <!-- <paper-material flex elevation="0" class="demo-block">
+            <div class="paper-font-title">{{item.kanji}}</div>
+            <div class="paper-font-subhead">{{item.kana}}</div>
+            <div class="paper-font-body2">{{item.trans}}</div>
+          </paper-material> -->
+          <paper-icon-item>
+            <div class="avatar blue" item-icon><span class="type">{{item.type}}</span></div>
+            <paper-item-body two-line>
+              <div>{{item.kana}}({{item.kanji}})</div>
+              <div secondary>{{item.trans}}</div>
+            </paper-item-body>
+            <template is="dom-if" if={{item.total_record}}>
+              <paper-icon-button icon="{{getIcon(item.total_record)}}">
+            </template>
+          </paper-icon-item>
         </template>
       </div>
+      <a class="play-fab" href$="{{_getTestHerf(data.id)}}">
+        <paper-fab icon="assignment-turned-in" title="heart" class="play-fab"></paper-fab>
+      </a>
     </paper-scroll-header-panel>
   </template>
   <script>
   Polymer({
     is: 'word-list',
-    properties: {
-      array: {
-        type: Array,
-        value: ['1', '1', '1', '1', '1', '1', '1', '1', '1']
-      }
-    },
+    properties: {},
     listeners: {
       'paper-header-transform': 'header-transform'
     },
-    _getTitle: (lesson)=>{
-      if(lesson) {
+    getIcon: function(record) {
+      if (record > 7) {
+        return 'stars';
+
+      } else if (record > 4) {
+        return 'star';
+
+      } else if (record > 1) {
+        return 'star-half';
+
+      } else {
+        return 'star-border';
+      }
+    },
+    _getTitle: (lesson) => {
+      if (lesson) {
         return `${lesson.book} ${lesson.chapter}单元 第${lesson.lesson}课`;
       }
+    },
+    _getTestHerf: (id) => {
+      return "#/test/" + id;
     },
     'header-transform': (e) => {
       var d = e.detail;

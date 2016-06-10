@@ -10,6 +10,9 @@
 <link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/bower_components/paper-styles/color.html">
 <link rel="import" href="/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="/bower_components/paper-item/paper-item.html">
+<link rel="import" href="/bower_components/paper-menu-button/paper-menu-button.html">
 <!--
 A comment describing this element
 
@@ -49,6 +52,7 @@ Example:
       float: left;
       width: 48%;
       height: auto;
+      position: relative;
     }
     
     .lesson-box:before {
@@ -119,26 +123,64 @@ Example:
       --paper-icon-button-ink-color: white;
     }
     
+    .bottom-text {
+      background-color: rgba(0, 0, 0, 0.1);
+      bottom: 0px;
+      position: absolute;
+      left: 0px;
+      right: 0px;
+      height: 20%;
+      vertical-align: middle;
+      display: flex;
+    }
+    
+    .bottom-text p {
+      margin: auto;
+    }
+    
+    .lesson-title {
+      margin: auto;
+    }
+    
+    .grid-bg {
+      max-height: 55%;
+      position: absolute;
+      margin: auto;
+      top: 0px;
+      bottom: 20%;
+      left: 0px;
+      right: 0px;
+    }
+    
     .spacer {
       @apply(--layout-flex);
     }
     </style>
     <iron-ajax auto url="/api/lessons" handle-as="json" last-response="{{data}}"></iron-ajax>
-    <paper-scroll-header-panel fixed>
+    <paper-scroll-header-panel fixed header-height="80">
       <paper-toolbar>
-        <paper-icon-button icon="arrow-back"></paper-icon-button>
-        <div class="spacer title">lessons</div>
-        <paper-icon-button icon="search"></paper-icon-button>
-        <paper-icon-button icon="more-vert"></paper-icon-button>
+        <paper-menu-button>
+          <paper-icon-button icon="menu" class="dropdown-trigger" alt="menu"></paper-icon-button>
+          <paper-menu class="dropdown-content" attr-for-selected="book" selected="{{filterValue}}">
+            <template is="dom-repeat" items="[[colors]]" as="letter">
+              <paper-item book="[[letter]]">[[letter]]</paper-item>
+            </template>
+          </paper-menu>
+        </paper-menu-button>
+        <div class="spacer title">{{filterValue}}</div>
+        <!--         <paper-icon-button icon="search"></paper-icon-button> -->
       </paper-toolbar>
       <div class="content">
-        <paper-input hidden label="Search" value="{{filterValue}}"></paper-input>
         <div class="">
           <template is="dom-repeat" items={{data}} as="item" filter="{{_filter(filterValue)}}" sort="_sort">
             <!-- {{item}} and {{index}} can be used in this binding scope -->
             <a href$="{{_getHerf(item.id)}}">
-              <paper-card class$="{{_getClass(colors.*, item.chapter)}}" heading="{{getLessonTitle(item)}}">
-              </paper-card>
+              <div class$="{{_getClass(colors.*, item.chapter)}}">
+                <div class="bottom-text paper-font-subhead">
+                  <p>{{getLessonTitle(item)}}</p>
+                </div>
+                <img class="grid-bg flex" src="{{_getUrl(item.lesson)}}">
+              </div>
             </a>
           </template>
         </div>
@@ -152,6 +194,18 @@ Example:
       colors: {
         type: Array,
         value: ['kaikon', 'benimidori', 'mizuasagi', 'benifuji']
+      },
+      data: {
+        tyep: Array,
+        value: []
+      },
+      books: {
+        tyep: Array,
+        value: []
+      },
+      filterValue: {
+        type: String,
+        value: ""
       }
     },
     _handleResponse: (data) => {
@@ -164,18 +218,21 @@ Example:
     _getHerf: (id) => {
       return "#/words/" + id;
     },
-    _filter: (filterVal) => {
-      return (lesson) => {
+    _filter: function (filterVal) {
+      return function(lesson) {
         if (!filterVal) return true;
         if (!lesson) return false;
-        return (lesson.book && ~lesson.book.indexOf(filterVal));
+        return (lesson.book == filterVal);
       }
     },
-    getLessonTitle: (item) => {
-      return item.book + ' ' + item.chapter + '单元';
+    getLessonTitle: function(item) {
+      return item.book + ' ' + item.chapter + '单元 第' + item.lesson + '课';
     },
-    _sort: (a, b) => {
-      a.id > b.id;
+    _getUrl: function(lid) {
+      return "./elements/custom-grid/3x/slice" + (lid % 15 +1) + "@3x.png";
+    },
+    _sort: function(a, b) {
+        return a.lesson > b.lesson;
     }
   });
   </script>

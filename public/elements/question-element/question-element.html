@@ -1,0 +1,162 @@
+<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="/bower_components/paper-scroll-header-panel/paper-scroll-header-panel.html">
+<link rel="import" href="/bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="/bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/bower_components/paper-styles/color.html">
+<link rel="import" href="/bower_components/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="/bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="/bower_components/paper-material/paper-material.html">
+<link rel="import" href="/bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="/bower_components/paper-radio-button/paper-radio-button.html">
+<!--
+A comment describing this element
+
+Example:
+
+    <my-elem></my-elem>
+
+Example:
+
+    <my-elem>
+      <h2>Hello my-elem</h2>
+    </my-elem>
+
+@demo demo/index.html
+-->
+<dom-module id="question-element">
+  <template>
+    <style>
+    :host {
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+    
+    paper-scroll-header-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: var(--paper-grey-200, #eee);
+      /* background for toolbar when it is at its full size */
+    }
+    
+    #wordbox {
+      width: 80%;
+      top: 64px;
+      margin: auto;
+      text-align: center;
+      background-color: #fff;
+    }
+    
+    #hideoption {
+      display: block;
+      margin-top: 100px;
+      text-align: center;
+    }
+    
+    paper-fab {
+      bottom: 0px;
+      float: right;
+      margin: 24px 16px;
+    }
+    </style>
+    <carbon-route route="{{route}}" pattern="/:lessonid" data="{{data}}" tail="{{tail}}"></carbon-route>
+    <iron-ajax auto url="/api/words/{{data.lessonid}}" handle-as="json" last-response="{{lastResponse}}"></iron-ajax>
+    <iron-ajax id='result' url="/api/test-result" handle-as="json" method="post" body="{{result}}" content-type="application/json" on-response="handleResponse"></iron-ajax>
+    <paper-scroll-header-panel fixed header-height="80">
+      <paper-toolbar>
+        <a href="/#/words/{{data.lessonid}}">
+          <paper-icon-button icon="arrow-back"></paper-icon-button>
+        </a>
+      </paper-toolbar>
+      <div class="content layout vertical">
+        <paper-material elevation="1" id="wordbox">
+          <template is="dom-if" if="{{lastResponse}}">
+            <p class="paper-font-display1">{{getWord(wordCount, 'kana', isHide)}}</p>
+            <p class="paper-font-display1">{{getWord(wordCount, 'kanji', isHide)}}</p>
+            <p class="paper-font-display1">{{getWord(wordCount, 'trans', isHide)}}</p>
+          </template>
+        </paper-material>
+        <paper-radio-group selected="{{hideItem}}" id="hideoption">
+          <paper-radio-button name="kana">假名</paper-radio-button>
+          <paper-radio-button name="kanji">汉字</paper-radio-button>
+          <paper-radio-button name="trans">翻译</paper-radio-button>
+        </paper-radio-group>
+        <div class="layout horizontal center-justified">
+          <paper-fab on-tap="_prevWord" icon="chevron-left" title="back" class="answer-fab"></paper-fab>
+          <paper-fab on-tap="_showAnswer" icon="close" title="show answer" class="answer-fab"></paper-fab>
+          <paper-fab icon="check" title="next word" class="next-fab" " on-tap="_nextWord"></paper-fab>
+        </div>
+      </div>
+    </paper-scroll-header-panel>   
+    
+  </template>
+  <script>
+  Polymer({
+    is: 'question-element',
+    properties: {
+      hideItem: {
+        type: String,
+        value: 'kana'
+      },
+      isHide: {
+        type: Boolean,
+        value: true,
+        notify: true
+      },
+      wordCount: {
+        type: Number,
+        value: 0
+      },
+      result: {
+        type: Object,
+        value: {}
+      },
+      refresh: {
+        type: Boolean,
+        value: true
+      }
+    },
+    observers: [
+      'showAnswer(isHide, hideItem)'
+    ],
+    handleResponse: function() {
+
+    },
+    getWord: function(id, path, isHide) {
+      return (isHide && path == this.hideItem) ? '???' : this.lastResponse.words[id][path];
+    },
+    showAnswer: function(isHide, hideItem) {
+      this.refresh = false;
+      this.refresh = true;
+    },
+    _nextWord: function() {
+      this.isHide = true;
+      this.wordCount = (this.wordCount + 1) % this.lastResponse.words.length;
+    },
+    _prevWord: function() {
+      this.isHide = true;
+      this.wordCount = (this.wordCount + this.lastResponse.words.length - 1) % this.lastResponse.words.length;
+    },
+    _showAnswer: function() {
+      if (this.isHide) {
+        this.isHide = false;
+        this.result = {
+          quesNum: this.lastResponse.words[this.wordCount].id,
+          errType: this.hideItem
+        };
+        this.$.result.generateRequest();
+      }
+    }
+  });
+  </script>
+</dom-module>
